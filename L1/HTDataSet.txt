@@ -1,0 +1,13 @@
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_8_1_F2m.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_7_1_60t.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_2_1_jDM.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_3_1_eVl.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_10_1_S3Y.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_9_1_RQI.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_4_1_cCo.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_5_1_3Tc.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_11_1_5a8.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_12_1_vOr.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_6_1_DC4.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_1_1_VTQ.root
+dcap://gfe02.grid.hep.ph.ic.ac.uk:22128//pnfs/hep.ph.ic.ac.uk/data/cms/store/user/bm409//L1Ntuples_Run2011A//HT_DataSetBug//L1Tree_13_1_YKW.root
