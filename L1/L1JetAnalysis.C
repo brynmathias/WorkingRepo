@@ -1,13 +1,4 @@
-#include "L1Ntuple.h"
-#include "hist.C"
-#include "Style.C"
-#include "TMath.h"
-#include "TLegend.h"
-#include "TMultiGraph.h"
-#include <TGraphAsymmErrors.h>
-#include <TF1.h>
-#include <TLorentzVector.h>
-#include "L1JetAnalysis.hh"
+#include "./L1JetAnalysis.hh"
 // --------------------------------------------------------------------
 //                       L1JetAnalysis macro definition
 //
@@ -23,7 +14,6 @@
 // --------------------------------------------------------------------
 //                             run function
 // --------------------------------------------------------------------
-
 
 void L1JetAnalysis::BookHistos() {
 
@@ -91,7 +81,7 @@ void L1JetAnalysis::BookHistos() {
       //  NB a bit of a hack to read out the correct value from the ReturnMatchedQuantity function -- Didnt know about Enums at the time, will re-write when there is time
       int Et = 1;
 
-      if(recoJet_->etCorr[0]>2..|| fabs(recoJet_->eta[0])<2.6 && looseID(0) ){ // check leading recoJet is with in barrel and has et>2GeV
+      if(recoJet_->etCorr[0]>2. && fabs(recoJet_->eta[0])< 2.6 && LooseID(0) ){ // check leading recoJet is with in barrel and has et>2GeV
       std::pair <int,int> matchedJet = ReturnMatchedJet(0); // Try to match a L1 Jet to the zeroth reco Jet, return the l1 type and l1 index of
 
       if( UnCorThresholds ){
@@ -119,7 +109,7 @@ void L1JetAnalysis::BookHistos() {
     // Note that for the resolution studies we can use more than the leading jet -- enter different loop
     for(size_t j = 0 ; j < recoJet_->et.size(); ++j)
     {
-      if ( !looseID(j) ) continue;
+      if ( !LooseID(j) ) continue;
       if( MatchJet(j) ){
           // barrel jets
         std::pair <int,int> matchedJetLoop = ReturnMatchedJet(i); // Try to match a L1 Jet to the jth reco Jet, return the l1 type and index of L1Jet
@@ -156,14 +146,14 @@ void L1JetAnalysis::BookHistos() {
       //forward jets
         if(fabs(recoJet_->eta[j]) > 3.0 ){
           if(recoJet_->eEMF[j] > 0.9){
-            RecoVsl1HFE->Fill(recoJet_->etCorr[j],ReturnMatchedQuantity(matchedJet,Et),wgt);
-            ResolutionEtHFE->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
-            ResolutionHFE->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
+            RecoVsl1HFE->Fill(recoJet_->etCorr[j],ReturnMatchedQuantity(matchedJetLoop,Et),wgt);
+            ResolutionEtHFE->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
+            ResolutionHFE->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
           }
           if(recoJet_->eEMF[j] < 0.4){
-            RecoVsl1HFH->Fill(recoJet_->etCorr[j],ReturnMatchedQuantity(matchedJet,Et),wgt);
-            ResolutionEtHFH->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
-            ResolutionHFH->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
+            RecoVsl1HFH->Fill(recoJet_->etCorr[j],ReturnMatchedQuantity(matchedJetLoop,Et),wgt);
+            ResolutionEtHFH->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
+            ResolutionHFH->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
           }
 
         }

@@ -23,7 +23,7 @@ class L1JetAnalysis : public L1Ntuple
   private :
   bool PassTrig(int ib,int bx);
   bool MatchJet(int RecoJetIdx);
-  bool PassHLT( string TrigBit);
+  bool PassHLT( TString TrigBit);
   bool LooseID( int Jet );
   std::pair <int,int> ReturnMatchedJet(int RecoJetIdx);
   void BookHistos();
@@ -192,7 +192,7 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
     return false;
   }
 
-  bool L1JetAnalysis::PassHLT( string TrigBit){
+  bool L1JetAnalysis::PassHLT( TString TrigBit){
   return  std::find(event_->hlt.begin(),event_->hlt.end(),TrigBit)!=event_->hlt.end();
   }
 
@@ -200,6 +200,9 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
     if( ( recoJet_->eEMF[Jet]>0.01  ) &&  ( recoJet_->n90hits[Jet] > 1 ) && ( recoJet_->fHPD[Jet] < 0.98 ) ) return true;
     else return false;
   }
+
+
+
 
 // int L1JetAnalysis::ReturnRecoObjectMatchedL1(int CenJetIndex,int Collection){
 //
