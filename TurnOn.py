@@ -70,7 +70,7 @@ def GethistFromFolder(DataSetName,folder,hist,col,norm,Legend):
     return hist
 
 
-outdirTmp = "./MHTX_Triggers/AlphaT/"
+outdirTmp = "./MHTX_Triggers/MHT/"
 histList = ["HT_all","AlphaT_all","MHT_all","HT_2","AlphaT_2","MHT_2","HT_3","AlphaT_3","MHT_3"]
 
 for Thresh in ["50","43","36"]:
@@ -80,8 +80,8 @@ for Thresh in ["50","43","36"]:
     outdir = outdirTmp+Thresh
     print outdir
     ensure_dir(outdir)
-    HT_Trigger =    GethistFromFolder("~/Desktop/MuHad_AlphaT_"+Thresh+".root","HT_Trigger",hist,1,0,"Data")
-    Cross_Trigger = GethistFromFolder("~/Desktop/MuHad_AlphaT_"+Thresh+".root","Cross_Trigger",hist,3,0,"+5GeV")
+    HT_Trigger =    GethistFromFolder("./MuHad_MHT_"+Thresh+".root","HT_Trigger",hist,1,0,"Data")
+    Cross_Trigger = GethistFromFolder("./MuHad_MHT_"+Thresh+".root","Cross_Trigger",hist,3,0,"+5GeV")
     HT_Trigger.GetXaxis().SetRangeUser(0.4,1.5)
     Cross_Trigger.GetXaxis().SetRangeUser(0.4,1.5)
     if "MHT" in hist:
@@ -99,7 +99,7 @@ for Thresh in ["50","43","36"]:
     TurnOn.Divide(Cross_Trigger,HT_Trigger)
     TurnOn.Draw("alp")
     if "AlphaT_" in hist:
-      # TurnOn.GetXaxis().SetRangeUser(0.4,0.7)
+      TurnOn.GetXaxis().SetRangeUser(0.4,0.7)
       TurnOn.GetXaxis().SetTitle("#alpha_{T}")
 
     c1.SaveAs(outdir+"/"+hist+".png")
