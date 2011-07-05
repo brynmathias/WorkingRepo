@@ -9,6 +9,7 @@ import ROOT as Root
 import math
 from time import strftime
 import os, commands
+import array
 Root.gROOT.SetStyle("Plain") #To set plain bkgds for slides
 Root.gStyle.SetTitleBorderSize(0)
 Root.gStyle.SetCanvasBorderMode(0)
@@ -23,7 +24,7 @@ Root.gStyle.SetTitleW(0.7)
 Root.gStyle.SetTitleH(0.07)
 Root.gStyle.SetOptTitle(1)
 Root.gStyle.SetOptStat(0)
-Root.gStyle.SetOptFit(0)
+Root.gStyle.SetOptFit(1)
 Root.gStyle.SetAxisColor(1, "XYZ");
 Root.gStyle.SetStripDecimals(Root.kTRUE);
 Root.gStyle.SetTickLength(0.03, "XYZ");
@@ -101,7 +102,27 @@ UnCorThresholds = [6.,10.,20.,30.,40.,60.]
 # 90U                 128
 def errorFun(x, par):
   return 0.5*par[0]*(1. + Root.TMath.Erf( (x[0] - par[1]) / (math.sqrt(2.)*par[2]) ))
-
+def reBiner(Hist,minimum):
+  """docstring for reBiner"""
+  upArray = []
+  nBins = -1
+  for bin in range(0,Hist.GetNbinsX()):
+    binC = 0
+    if Hist.GetBinContent(bin) > minimum:
+      upArray.append(Hist.GetBinLowEdge(bin+1))
+      nBins+=1
+    else:
+      binC += Hist.GetBinContent(bin)
+      if binC > minimum:
+        upArray.append(Hist.GetBinLowEdge(bin+1))
+        nBins+=1
+        binC = 0
+  upArray.append(Hist.GetBinLowEdge(Hist.GetNbinsX()))
+  nBins+=1
+  rebinList = array.array('d',upArray)
+  print upArray
+  print nBins
+  return (nBins,rebinList)
 
 
 # First Make Turn on curves
@@ -110,21 +131,32 @@ def MakeTurnOn(CorrHist = None, UnCorrHist = None , BitList = [] ,CorThresholds 
   for Trig,Cor,UnCor in zip(BitList,CorThresholds,UnCorThresholds):
     Nom = GetHist(CorrHist,"/",Trig,0,0,"Jet Threshold = %f"%(Cor))
     DeNom = GetHist(CorrHist,"/","RefJet",0,0,0)
+    (i,bins)= reBiner(Nom,20.)
+    a = Nom.Rebin(i,"a",bins)
+    b = DeNom.Rebin(i,"b",bins)
     TurnOn = Root.TGraphAsymmErrors()
-    TurnOn.Divide(Nom,DeNom)
-    TurnOn.Draw("alp")
+    TurnOn.Divide(a,b)
+    TurnOn.Draw("ap")
+    TurnOn.GetXaxis().SetRangeUser(0.,100.)
     fermiFunction = Root.TF1("fermiFunction",errorFun,0.,1000.,3)
     fermiFunction.SetParameters(1.00,Cor,1.)
+    fermiFunction.SetParNames("#epsilon","#mu","#sigma")
     TurnOn.Fit(fermiFunction,"%f"%(Cor),"%f"%(Cor),0.,100.)
+    fermiFunction.Draw("same")
     out.append(TurnOn)
     if UnCorrHist != None:
       Nom = GetHist(UnCorrHist,"/",Trig,0,0,"Jet Threshold = %f"%(UnCor))
       DeNom = GetHist(UnCorrHist,"/","RefJet",0,0,0)
       TurnOn = Root.TGraphAsymmErrors()
-      TurnOn.Divide(Nom,DeNom)
-      TurnOn.Draw("alp same")
+      (i,bins)= reBiner(Nom,20.)
+      c = Nom.Rebin(i,"c",bins)
+      d = DeNom.Rebin(i,"d",bins)
+      TurnOn.Divide(c,d)
+      TurnOn.Draw("ap same")
+      TurnOn.GetXaxis().SetRangeUser(0.,100.)
       fermiFunction = Root.TF1("fermiFunction",errorFun,0.,1000.,3)
       fermiFunction.SetParameters(1.00,UnCor,1.)
+      fermiFunction.SetParNames("#epsilon","#mu","#sigma")
       TurnOn.Fit(fermiFunction,"%f"%(UnCor),"%i"%(int(UnCor)),0.,100.)
     c1.SaveAs("TurnOnFor_%i.pdf"%(int(Cor)))
     c1.Clear()
@@ -132,7 +164,7 @@ def MakeTurnOn(CorrHist = None, UnCorrHist = None , BitList = [] ,CorThresholds 
   return out
 
 
-a = MakeTurnOn(CorrHist = "2011Data.root", UnCorrHist = None, BitList = BitList,
+a = MakeTurnOn(CorrHist = "Comb.root", UnCorrHist = None, BitList = BitList,
                 CorThresholds = CorThresholds, UnCorThresholds = UnCorThresholds)
 
 multi = Root.TMultiGraph()
