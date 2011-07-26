@@ -26,6 +26,12 @@ void L1JetAnalysis::BookHistos() {
   Bit20   = new TH1F("Bit20", "JetEt",1000,0.,1000);
   Bit21   = new TH1F("Bit21", "JetEt",1000,0.,1000);
   l1JetEn = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
+  l1Jet0 = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
+  l1Jet1 = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
+  l1Jet2 = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
+  l1Jet3 = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
+  l1Jet4 = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
+  l1Jet5 = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
 // CandidateJets30Gev = new TH1F("RefJet", "RefJetEt",200,0.,1000);
   RecoVsl1HFE       = new TH2F(     "RecoVsl1HFE",    "Offline Uncorrected Jet Et; L1 Jet Et",1000,0.,1000.,1000,0.,1000);
   ResolutionEtHFE   = new TH2F( "ResolutionEtHFE","RecoJetEt;(Reco Jet Et - L1 Jet Et) / Reco Jet Et",500.,0.,500.,200,-10.,10);
@@ -80,38 +86,78 @@ void L1JetAnalysis::BookHistos() {
       // Selection for the turn on curves
 
       //  NB a bit of a hack to read out the correct value from the ReturnMatchedQuantity function -- Didnt know about Enums at the time, will re-write when there is time
+
+      // Note as corrected jets are no longer listed in pt order we now have to find the leading jet
+      int leadJet = leadingOfflineJet();
       int Et = 1;
 
-      if(recoJet_->etCorr[0]>2. && fabs(recoJet_->eta[0])< 2.6 && LooseID(0) ){ // check leading recoJet is with in barrel and has et>2GeV
-      std::pair <int,int> matchedJet = ReturnMatchedJet(0); // Try to match a L1 Jet to the zeroth reco Jet, return the l1 type and l1 index of
+      if(recoJet_->etCorr[leadJet]>2. && fabs(recoJet_->eta[leadJet])< 2.6 && LooseID(leadJet) ){ // check leading recoJet is with in barrel and has et>2GeV
+      std::pair <int,int> matchedJet = ReturnMatchedJet(leadJet); // Try to match a L1 Jet to the zeroth reco Jet, return the l1 type and l1 index of
       //cout << " Match jet is : " << matchedJet.first << " " << matchedJet.second << endl;
       //cout << " Matched Jet Pt is : " << ReturnMatchedQuantity(matchedJet,1) << " Offline Jet ET " << recoJet_->etCorr[0] << endl;
+
       if(!MatchJet(0)) continue;
-      RefJets->Fill(recoJet_->etCorr[0],wgt); // Denominator for turn on curves
+      RefJets->Fill(recoJet_->etCorr[leadJet],wgt); // Denominator for turn on curves
       if( UnCorThresholds ){
         // Ask for old UnCorThresholds -- Use on the 2010 Data
-        if(ReturnMatchedQuantity(matchedJet,Et)> 6.){  Bit15      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet16
-        if(ReturnMatchedQuantity(matchedJet,Et)> 10.){ Bit16      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet36
-        if(ReturnMatchedQuantity(matchedJet,Et)> 20.){ Bit17      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet52
-        if(ReturnMatchedQuantity(matchedJet,Et)> 30.){ Bit18      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet68
-        if(ReturnMatchedQuantity(matchedJet,Et)> 40.){ Bit19      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet92
-        if(ReturnMatchedQuantity(matchedJet,Et)> 60.){ Bit20      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet128
+        if(ReturnMatchedQuantity(matchedJet,Et)> 6.) {
+            Bit15->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet0->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet16
+        if(ReturnMatchedQuantity(matchedJet,Et)> 10.){
+            Bit16->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet1->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet36
+        if(ReturnMatchedQuantity(matchedJet,Et)> 20.){
+            Bit17->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet2->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet52
+        if(ReturnMatchedQuantity(matchedJet,Et)> 30.){
+            Bit18->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet3->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet68
+        if(ReturnMatchedQuantity(matchedJet,Et)> 40.){
+            Bit19->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet4->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet92
+        if(ReturnMatchedQuantity(matchedJet,Et)> 60.){
+            Bit20->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet5->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet128
       }
       else{
         // Ask for Corrected L1 Jets -- Use on 2011 Data
-        if(ReturnMatchedQuantity(matchedJet,Et)> 16.){ Bit15      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet16
-        if(ReturnMatchedQuantity(matchedJet,Et)> 20.){ Bit16      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet36
-        if(ReturnMatchedQuantity(matchedJet,Et)> 36.){ Bit17      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet52
-        if(ReturnMatchedQuantity(matchedJet,Et)> 52.){ Bit18      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet68
-        if(ReturnMatchedQuantity(matchedJet,Et)> 68.){ Bit19      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet92
-        if(ReturnMatchedQuantity(matchedJet,Et)> 92.){ Bit20      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet128
+        if(ReturnMatchedQuantity(matchedJet,Et)> 16.){
+            Bit15->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet0->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet16
+        if(ReturnMatchedQuantity(matchedJet,Et)> 20.){
+            Bit16->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet1->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet36
+        if(ReturnMatchedQuantity(matchedJet,Et)> 36.){
+            Bit17->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet2->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet52
+        if(ReturnMatchedQuantity(matchedJet,Et)> 52.){
+            Bit18->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet3->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet68
+        if(ReturnMatchedQuantity(matchedJet,Et)> 68.){
+            Bit19->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet4->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet92
+        if(ReturnMatchedQuantity(matchedJet,Et)> 92.){
+            Bit20->Fill(recoJet_->etCorr[leadJet],wgt);
+            l1Jet5->Fill(ReturnMatchedQuantity(matchedJet,Et),wgt);
+        } // now goes to SingleJet128
       }
 
     }
     //Make a plot of the 0th L1 Jet energy
     l1JetEn->Fill(MaxL1Et(),wgt);
     // Note that for the resolution studies we can use more than the leading jet -- enter different loop
-    for(size_t j = 0 ; j < recoJet_->et.size(); ++j)
+    for(size_t j = 0 ; j < recoJet_->etCorr.size(); ++j)
     {
       if ( !LooseID(j) ) continue;
       if( MatchJet(j) ){
@@ -209,6 +255,12 @@ void L1JetAnalysis::BookHistos() {
     ResolutionAsFnOfpT->Write();
     ResolutionAsFnOfeta->Write();
     l1JetEn->Write();
+    l1Jet0->Write();
+    l1Jet1->Write();
+    l1Jet2->Write();
+    l1Jet3->Write();
+    l1Jet4->Write();
+    l1Jet5->Write();
     // Write and close the file!
     theFile->Write();
     theFile->Close();

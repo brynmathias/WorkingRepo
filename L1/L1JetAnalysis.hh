@@ -31,9 +31,10 @@ class L1JetAnalysis : public L1Ntuple
   virtual double deltaPhi(double phi1, double phi2);
   virtual double deltaR(double eta1, double phi1, double eta2, double phi2);
   double MaxL1Et();
+  int leadingOfflineJet();
 //your private methods can be declared here
 // histos
-  TH1F *l1JetEn; 
+  TH1F *l1JetEn;
   TH1F *RefJets;
   TH1F *Bit15;
   TH1F *Bit16;
@@ -42,6 +43,12 @@ class L1JetAnalysis : public L1Ntuple
   TH1F *Bit19;
   TH1F *Bit20;
   TH1F *Bit21;
+  TH1F *l1Jet0;
+  TH1F *l1Jet1;
+  TH1F *l1Jet2;
+  TH1F *l1Jet3;
+  TH1F *l1Jet4;
+  TH1F *l1Jet5;
   TH1F *CandidateJets30Gev;
   TH2F *RecoVsl1HFE;
   TH2F *ResolutionEtHFE;
@@ -116,12 +123,12 @@ std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
       std::pair <int,int> matchedJet(0,i);
       //cout << "L1Jet Pt " << l1extra_->cenJetEt[i] << endl;
       return matchedJet;
-      
+
     }
   }
 
   for(unsigned int i = 0; i < l1extra_->nTauJets; i++){
-     //cout << "No TauJets " << l1extra_->nTauJets << " On Jet : " << i  << " L1 CenJet ETs are : " << l1extra_->tauJetEt[i] << endl;   
+     //cout << "No TauJets " << l1extra_->nTauJets << " On Jet : " << i  << " L1 CenJet ETs are : " << l1extra_->tauJetEt[i] << endl;
   if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]) <= 0.5)
     {
       std::pair <int,int> matchedJet(1,i);
@@ -205,7 +212,7 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
   std::vector<TString>::iterator TrigEnd = event_->hlt.end();
   TString ne = TrigBit.Chop();
   for( ; TrigList!=TrigEnd ; ++ TrigList){
-    if( TrigList->Contains( ne ) ) { 
+    if( TrigList->Contains( ne ) ) {
      //std::cout << *TrigList << " Compared  " << ne << std::endl;
      return true; }
      }
@@ -280,5 +287,16 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
          else return c;
        }
 
-
+      int L1JetAnalysis::leadingOfflineJet(){
+        double maxEn = 0.;
+        int index = -1;
+        for(size_t i = 0; i < (recoJet_->etCorr).size(); ++i)
+        {
+          if(recoJet_->etCorr[i] > maxEn){
+            maxEn = recoJet_->etCorr[i];
+              index = i;
+          }
+        }
+        return index;
+      }
 
