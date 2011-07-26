@@ -368,7 +368,6 @@ for(size_t j = 0 ; j < recoJet_->et.size(); ++j)
             ResolutionEtEB->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
             ResolutionEB->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
           }
-
           if(recoJet_->eEMF[j] < 0.4){
             RecoVsl1HB->Fill(recoJet_->etCorr[j],ReturnMatchedQuantity(matchedJetLoop,Et),wgt);
             ResolutionEtHB->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
@@ -383,17 +382,12 @@ for(size_t j = 0 ; j < recoJet_->et.size(); ++j)
 
             ResolutionEE->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
           }
-
-
           if(recoJet_->eEMF[j] < 0.4){
             RecoVsl1HE->Fill(recoJet_->etCorr[j],ReturnMatchedQuantity(matchedJetLoop,Et),wgt);
             ResolutionEtHE->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
             ResolutionHE->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
           }
-
         }
-
-
       //forward jets
         if(fabs(recoJet_->eta[j]) > 3.0 ){
           if(recoJet_->eEMF[j] > 0.9){
@@ -401,15 +395,12 @@ for(size_t j = 0 ; j < recoJet_->et.size(); ++j)
             ResolutionEtHFE->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
             ResolutionHFE->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
           }
-
           if(recoJet_->eEMF[j] < 0.4){
             RecoVsl1HFH->Fill(recoJet_->etCorr[j],ReturnMatchedQuantity(matchedJet,Et),wgt);
             ResolutionEtHFH->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
             ResolutionHFH->Fill((recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJet,Et))/recoJet_->etCorr[j],wgt);
           }
-
         }
-
       }
 
 }

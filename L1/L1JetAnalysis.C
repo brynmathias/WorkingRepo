@@ -25,7 +25,8 @@ void L1JetAnalysis::BookHistos() {
   Bit19   = new TH1F("Bit19", "JetEt",1000,0.,1000);
   Bit20   = new TH1F("Bit20", "JetEt",1000,0.,1000);
   Bit21   = new TH1F("Bit21", "JetEt",1000,0.,1000);
-  // CandidateJets30Gev = new TH1F("RefJet", "RefJetEt",200,0.,1000);
+  l1JetEn = new TH1F("L1Energy", "L1Et",1000,0.,1000.);
+// CandidateJets30Gev = new TH1F("RefJet", "RefJetEt",200,0.,1000);
   RecoVsl1HFE       = new TH2F(     "RecoVsl1HFE",    "Offline Uncorrected Jet Et; L1 Jet Et",1000,0.,1000.,1000,0.,1000);
   ResolutionEtHFE   = new TH2F( "ResolutionEtHFE","RecoJetEt;(Reco Jet Et - L1 Jet Et) / Reco Jet Et",500.,0.,500.,200,-10.,10);
   ResolutionHFE     = new TH1F(   "ResolutionHFE",  "(Reco Jet Et - L1 Jet Et) / Reco Jet Et",200,-10.,10);
@@ -53,7 +54,7 @@ void L1JetAnalysis::BookHistos() {
 // --------------------------------------------------------------------
 //                             run function
 // --------------------------------------------------------------------
-  void L1JetAnalysis::run(Long64_t nevents, TString outputname, bool UnCorThresholds) //To run use m.run(events,"SomeoutputName")
+  void L1JetAnalysis::run(Long64_t nevents, TString outputname, bool UnCorThresholds, TString TriggerBit) //To run use m.run(events,"SomeoutputName")
   {
     //Book Histos
     BookHistos();
@@ -70,12 +71,12 @@ void L1JetAnalysis::BookHistos() {
       Long64_t ientry = LoadTree(i); if (ientry < 0) break;
       GetEntry(i);
       //process progress
-      if( i!=0 && ( i%10000 ) ==0 ) {std::cout << "- processing event " << i << "\r" << std::flush;}
+      if( i!=0 && ( i%1000 ) ==0 ) {std::cout << "- processing event " << i << "\r" << std::flush;}
       double wgt =1.0;
       // Check that we have jets in the event.
       if((recoJet_->et).size() < 1) continue;
       // Trigger stuff
-      if ( !PassHLT("HLT_L1Tech_BSC_minBias_threshold1_v1") ) continue;
+      if (!TriggerBit.IsWhitespace() && !PassHLT(TriggerBit) ) continue;
       // Selection for the turn on curves
 
       //  NB a bit of a hack to read out the correct value from the ReturnMatchedQuantity function -- Didnt know about Enums at the time, will re-write when there is time
@@ -83,7 +84,10 @@ void L1JetAnalysis::BookHistos() {
 
       if(recoJet_->etCorr[0]>2. && fabs(recoJet_->eta[0])< 2.6 && LooseID(0) ){ // check leading recoJet is with in barrel and has et>2GeV
       std::pair <int,int> matchedJet = ReturnMatchedJet(0); // Try to match a L1 Jet to the zeroth reco Jet, return the l1 type and l1 index of
-
+      //cout << " Match jet is : " << matchedJet.first << " " << matchedJet.second << endl;
+      //cout << " Matched Jet Pt is : " << ReturnMatchedQuantity(matchedJet,1) << " Offline Jet ET " << recoJet_->etCorr[0] << endl;
+      if(!MatchJet(0)) continue;
+      RefJets->Fill(recoJet_->etCorr[0],wgt); // Denominator for turn on curves
       if( UnCorThresholds ){
         // Ask for old UnCorThresholds -- Use on the 2010 Data
         if(ReturnMatchedQuantity(matchedJet,Et)> 6.){  Bit15      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet16
@@ -102,17 +106,17 @@ void L1JetAnalysis::BookHistos() {
         if(ReturnMatchedQuantity(matchedJet,Et)> 68.){ Bit19      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet92
         if(ReturnMatchedQuantity(matchedJet,Et)> 92.){ Bit20      ->Fill(recoJet_->etCorr[0],wgt); } // now goes to SingleJet128
       }
-      if(MatchJet(0)){RefJets->Fill(recoJet_->etCorr[0],wgt);} // Denominator for turn on curves
 
     }
-
+    //Make a plot of the 0th L1 Jet energy
+    l1JetEn->Fill(MaxL1Et(),wgt);
     // Note that for the resolution studies we can use more than the leading jet -- enter different loop
     for(size_t j = 0 ; j < recoJet_->et.size(); ++j)
     {
       if ( !LooseID(j) ) continue;
       if( MatchJet(j) ){
           // barrel jets
-        std::pair <int,int> matchedJetLoop = ReturnMatchedJet(i); // Try to match a L1 Jet to the jth reco Jet, return the l1 type and index of L1Jet
+        std::pair <int,int> matchedJetLoop = ReturnMatchedJet(j); // Try to match a L1 Jet to the jth reco Jet, return the l1 type and index of L1Jet
         EMF->Fill(recoJet_->eEMF[j],2);
         ResolutionAsFnOfeta->Fill(recoJet_->eta[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
         ResolutionAsFnOfpT->Fill(recoJet_->etCorr[j], (recoJet_->etCorr[j]-ReturnMatchedQuantity(matchedJetLoop,Et))/recoJet_->etCorr[j],wgt);
@@ -204,7 +208,7 @@ void L1JetAnalysis::BookHistos() {
     RefJets->Write();
     ResolutionAsFnOfpT->Write();
     ResolutionAsFnOfeta->Write();
-
+    l1JetEn->Write();
     // Write and close the file!
     theFile->Write();
     theFile->Close();

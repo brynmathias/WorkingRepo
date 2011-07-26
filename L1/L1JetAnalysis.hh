@@ -7,7 +7,7 @@
 #include <TGraphAsymmErrors.h>
 #include <TF1.h>
 #include <TLorentzVector.h>
-
+#include <iostream>
 class L1JetAnalysis : public L1Ntuple
 {
   public :
@@ -18,7 +18,7 @@ class L1JetAnalysis : public L1Ntuple
   ~L1JetAnalysis() {}
 
     //main function macro : arguments can be adpated to your need
-  void run(Long64_t nevents, TString outputname , bool UnCorThresholds);
+  void run(Long64_t nevents, TString outputname , bool UnCorThresholds,TString TriggerBit);
 
   private :
   bool PassTrig(int ib,int bx);
@@ -30,8 +30,10 @@ class L1JetAnalysis : public L1Ntuple
   double ReturnMatchedQuantity( std::pair<int,int> matchJet,int Quantity);
   virtual double deltaPhi(double phi1, double phi2);
   virtual double deltaR(double eta1, double phi1, double eta2, double phi2);
-    //your private methods can be declared here
+  double MaxL1Et();
+//your private methods can be declared here
 // histos
+  TH1F *l1JetEn; 
   TH1F *RefJets;
   TH1F *Bit15;
   TH1F *Bit16;
@@ -108,17 +110,22 @@ bool L1JetAnalysis::MatchJet(int RecoJetIdx){
 std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
 
   for(unsigned int i = 0; i < l1extra_->nCenJets; i++){
+    //cout << "No CenJets " << l1extra_->nCenJets << " On Jet : " << i  << " L1 CenJet ETs are : " << l1extra_->cenJetEt[i] << endl;
     if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]) <= 0.5)
     {
       std::pair <int,int> matchedJet(0,i);
+      //cout << "L1Jet Pt " << l1extra_->cenJetEt[i] << endl;
       return matchedJet;
+      
     }
   }
 
   for(unsigned int i = 0; i < l1extra_->nTauJets; i++){
-    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]) <= 0.5)
+     //cout << "No TauJets " << l1extra_->nTauJets << " On Jet : " << i  << " L1 CenJet ETs are : " << l1extra_->tauJetEt[i] << endl;   
+  if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]) <= 0.5)
     {
       std::pair <int,int> matchedJet(1,i);
+      //cout << "L1TauJet Pt " << l1extra_->tauJetEt[i] << endl;
       return matchedJet;
     }
   }
@@ -143,13 +150,14 @@ bool L1JetAnalysis::PassTrig(int bit, int bx) {
 
 double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Quantity){
   if(Quantity == 1){
-    if(matchJet.first==0){
+    if(matchJet.first== 0){
       return l1extra_->cenJetEt[matchJet.second];
     }
-    if(matchJet.first==1){
+    if(matchJet.first== 1){
+      //cout << " matched jet ET is " << l1extra_->tauJetEt[matchJet.second] << endl;
       return l1extra_->tauJetEt[matchJet.second];
     }
-    if(matchJet.first ==2 ){
+    if(matchJet.first == 2 ){
       return l1extra_->fwdJetEt[matchJet.second];
     }
     if(matchJet.first==-1){
@@ -193,9 +201,16 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
   }
 
   bool L1JetAnalysis::PassHLT( TString TrigBit){
-  return  std::find(event_->hlt.begin(),event_->hlt.end(),TrigBit)!=event_->hlt.end();
-  }
-
+  std::vector<TString>::iterator TrigList = event_->hlt.begin();
+  std::vector<TString>::iterator TrigEnd = event_->hlt.end();
+  TString ne = TrigBit.Chop();
+  for( ; TrigList!=TrigEnd ; ++ TrigList){
+    if( TrigList->Contains( ne ) ) { 
+     //std::cout << *TrigList << " Compared  " << ne << std::endl;
+     return true; }
+     }
+  return false;
+ }
   bool L1JetAnalysis::LooseID( int Jet ){
     if( ( recoJet_->eEMF[Jet]>0.01  ) &&  ( recoJet_->n90hits[Jet] > 1 ) && ( recoJet_->fHPD[Jet] < 0.98 ) ) return true;
     else return false;
@@ -251,19 +266,19 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
 //       }
 //
 //
-//       double L1JetAnalysis::MaxL1Et(){
-//         double a = 0.;
-//         double b = 0.;
-//         double c = 0.;
-//
-//       if((l1extra_->cenJetEt).size() > 0) a = l1extra_->cenJetEt[0];
-//       if((l1extra_->tauJetEt).size() > 0) b = l1extra_->tauJetEt[0];
-//       if((l1extra_->fwdJetEt).size() > 0) c = l1extra_->fwdJetEt[0];
-//         if(max(a,b) >c){
-//           return ( a > b ? a : b );
-//         }
-//         else return c;
-//       }
+       double L1JetAnalysis::MaxL1Et(){
+         double a = 0.;
+         double b = 0.;
+         double c = 0.;
+
+       if((l1extra_->cenJetEt).size() > 0) a = l1extra_->cenJetEt[0];
+       if((l1extra_->tauJetEt).size() > 0) b = l1extra_->tauJetEt[0];
+       if((l1extra_->fwdJetEt).size() > 0) c = l1extra_->fwdJetEt[0];
+         if(max(a,b) >c){
+           return ( a > b ? a : b );
+         }
+         else return c;
+       }
 
 
 
