@@ -49,6 +49,8 @@ class L1JetAnalysis : public L1Ntuple
   TH1F *l1Jet3;
   TH1F *l1Jet4;
   TH1F *l1Jet5;
+  TH1F *dR;
+  TH2F *EnCorrelation;
   TH1F *CandidateJets30Gev;
   TH2F *RecoVsl1HFE;
   TH2F *ResolutionEtHFE;
@@ -72,6 +74,7 @@ class L1JetAnalysis : public L1Ntuple
   TH2I *timeMap;
   TH2F *ResolutionAsFnOfpT;
   TH2F *ResolutionAsFnOfeta;
+  TH2D *L1EtaPhiMap;
 };
 
 double L1JetAnalysis::deltaPhi(double phi1, double phi2) {
@@ -90,61 +93,75 @@ double L1JetAnalysis::deltaR(double eta1, double phi1, double eta2, double phi2)
 
 
 bool L1JetAnalysis::MatchJet(int RecoJetIdx){
-
+  double minDeltaR = 999999.;
   for(unsigned int i = 0; i < l1extra_->nCenJets; i++){
-    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]) <= 0.5)
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]) < minDeltaR)
     {
-      return true;
+        minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]);
     }
   }
 
   for(unsigned int i = 0; i < l1extra_->nTauJets; i++){
-    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]) <= 0.5)
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]) < minDeltaR)
     {
-      return true;
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]);
     }
   }
 
   for(unsigned int i = 0; i < l1extra_->nFwdJets; i++){
-    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]) <= 0.5)
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]) < minDeltaR)
     {
-      return true;
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]);
     }
   }
-  return false;
+  if(minDeltaR < 0.5){ return true; }
+  else return false;
 }
 
 std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
-
-  for(unsigned int i = 0; i < l1extra_->nCenJets; i++){
-    //cout << "No CenJets " << l1extra_->nCenJets << " On Jet : " << i  << " L1 CenJet ETs are : " << l1extra_->cenJetEt[i] << endl;
-    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]) <= 0.5)
-    {
-      std::pair <int,int> matchedJet(0,i);
-      //cout << "L1Jet Pt " << l1extra_->cenJetEt[i] << endl;
-      return matchedJet;
-
-    }
-  }
-
-  for(unsigned int i = 0; i < l1extra_->nTauJets; i++){
-     //cout << "No TauJets " << l1extra_->nTauJets << " On Jet : " << i  << " L1 CenJet ETs are : " << l1extra_->tauJetEt[i] << endl;
-  if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]) <= 0.5)
-    {
-      std::pair <int,int> matchedJet(1,i);
-      //cout << "L1TauJet Pt " << l1extra_->tauJetEt[i] << endl;
-      return matchedJet;
-    }
-  }
-
-  for(unsigned int i = 0; i < l1extra_->nFwdJets; i++){
-    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]) <= 0.5)
-    {
-      std::pair <int,int> matchedJet(2,i);
-      return matchedJet;
-    }
-  }
+  double minDeltaR = 9999.;
   std::pair <int,int> matchedJet(-1,-1);
+  //printf("Reco Jet %i is Et,EtCorr,Eta,Phi (%f ,%f, %f, %f) \n ", RecoJetIdx,recoJet_->et[RecoJetIdx],recoJet_->etCorr[RecoJetIdx] , recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx]);
+  for(unsigned int i = 0; i < l1extra_->nCenJets; i++){
+
+    //printf("CenJet Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", l1extra_->cenJetEt[i] , l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]);
+
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]) < minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]);
+      //printf( "Delta R = %f \n", minDeltaR);
+      if(minDeltaR < 0.5){
+      matchedJet.first = 0;
+      matchedJet.second = i;
+      }
+    }
+  }
+  //printf("Reco Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", recoJet_->etCorr[RecoJetIdx] , recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx]);
+  for(unsigned int i = 0; i < l1extra_->nTauJets; i++){
+    //printf("Tau Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", l1extra_->tauJetEt[i] , l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]);
+ if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]) < minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]);
+      //printf( "Delta R = %f \n", minDeltaR);
+      if(minDeltaR < 0.5){
+      matchedJet.first = 1;
+      matchedJet.second = i;
+      }
+    }
+  }
+  for(unsigned int i = 0; i < l1extra_->nFwdJets; i++){
+      //printf("FWD Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", l1extra_->fwdJetEt[i] , l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]);
+
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]) <minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]);
+      //printf( "Delta R = %f \n", minDeltaR);
+      if(minDeltaR < 0.5){
+      matchedJet.first = 2;
+      matchedJet.second = i;
+      }
+    }
+  }
   return matchedJet;
 }
 
@@ -172,7 +189,6 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
     }
 
     if(Quantity==2){
-      switch(matchJet.first){
         if(matchJet.first==0){
           return l1extra_->cenJetEta[matchJet.second];
         }
@@ -185,11 +201,9 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
         if(matchJet.first==-1){
           return false;
         }
-      }
     }
 
     if(Quantity==3){
-      switch(matchJet.first){
         if(matchJet.first==0){
           return l1extra_->cenJetPhi[matchJet.second];
         }
@@ -202,7 +216,6 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
         if(matchJet.first==-1){
           return false;
         }
-      }
     }
     return false;
   }
@@ -290,11 +303,13 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
       int L1JetAnalysis::leadingOfflineJet(){
         double maxEn = 0.;
         int index = -1;
-        for(size_t i = 0; i < (recoJet_->etCorr).size(); ++i)
+
+        for(int i = 0; i < (recoJet_->etCorr).size(); ++i)
         {
           if(recoJet_->etCorr[i] > maxEn){
+            // //printf("Highest RecoJet is %d , with an Et of %f \n",i,recoJet_->etCorr[i]);
             maxEn = recoJet_->etCorr[i];
-              index = i;
+            index = i;
           }
         }
         return index;
