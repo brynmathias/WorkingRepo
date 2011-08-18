@@ -10,6 +10,14 @@ import math
 from time import strftime
 import os, commands
 import array
+def ensure_dir(path):
+    try:
+      os.makedirs(path)
+    except OSError as exc: # Python >2.5
+      if exc.errno == errno.EEXIST:
+        pass
+      else: raise
+
 Root.gROOT.SetStyle("Plain") #To set plain bkgds for slides
 Root.gStyle.SetTitleBorderSize(0)
 Root.gStyle.SetCanvasBorderMode(0)
@@ -76,15 +84,19 @@ prelim = Root.TLatex(0.15,0.92,"#scale[0.8]{CMS}")
 prelim.SetNDC()
 lumi = Root.TLatex(0.45,.82,"#scale[0.8]{#int L dt = 35 pb^{-1}, #sqrt{s} = 7 TeV}")
 lumi.SetNDC()
-c1 = Root.TCanvas("canvas","canname",1400,900)
+c1 = Root.TCanvas("canvas","canname",1200,1400)
 mainPad = Root.TPad("","",0.01,0.25,0.99,0.99);
 mainPad.SetNumber(1);
 mainPad.SetBottomMargin(0.5);
 mainPad.Draw();
 
-BitList=["Bit15","Bit16","Bit17","Bit18","Bit19","Bit21","Bit20"]
-CorThresholds =   [16.,20.,36.,52.,68.,92.]
-UnCorThresholds = [16.,20.,36.,52.,68.,92.]#[6.,10.,20.,30.,40.,60.]
+
+
+
+BitList=["Bit15","Bit16","Bit17","Bit18","Bit19","Bit20","Bit21","RecoHTL150","RecoHTL1100","RecoHTL1150"]
+RefList = ["RefJet","RefJet","RefJet","RefJet","RefJet","RefJet","RefJet","RecoHT","RecoHT","RecoHT"]
+CorThresholds =   [16.,20.,36.,52.,68.,92.,128.,50.,100.,150.]
+UnCorThresholds = [16.,20.,36.,52.,68.,92.,128.,50.,100.,150.]#[6.,10.,20.,30.,40.,60.]
 
 
 # Conversion Table:
@@ -128,9 +140,9 @@ def reBiner(Hist,minimum):
 # First Make Turn on curves
 def MakeTurnOn(CorrHist = None, UnCorrHist = None , BitList = [] ,CorThresholds = [], UnCorThresholds = []):
   out = []
-  for Trig,Cor,UnCor in zip(BitList,CorThresholds,UnCorThresholds):
+  for Trig,Cor,UnCor,Ref in zip(BitList,CorThresholds,UnCorThresholds,RefList):
     Nom = GetHist(CorrHist,"/",Trig,0,0,"PromprReco-v4 Threshold = %f"%(Cor))
-    DeNom = GetHist(CorrHist,"/","RefJet",0,0,0)
+    DeNom = GetHist(CorrHist,"/",Ref,0,0,0)
     (i,bins)= reBiner(Nom,10.)
     a = Nom.Rebin(i,"a",bins)
     b = DeNom.Rebin(i,"b",bins)
@@ -140,54 +152,64 @@ def MakeTurnOn(CorrHist = None, UnCorrHist = None , BitList = [] ,CorThresholds 
     TurnOn.SetMarkerColor(4)
     TurnOn.SetMarkerStyle(30)
     mg.Add(TurnOn)
-    fermiFunction = Root.TF1("fermiFunction",errorFun,0.,1000.,3)
-    fermiFunction.SetParameters(1.00,Cor,1.)
+    low = 0. if (Cor - 25.) < 0. else Cor - 25.
+    high = 1000.
+    fermiFunction = Root.TF1("fermiFunction",errorFun,low,high,3)
+    fermiFunction.SetParameters(1.00,Cor+10.,1.)
     fermiFunction.SetParNames("#epsilon","#mu","#sigma")
-    TurnOn.Fit(fermiFunction,"%f"%(Cor),"%f"%(Cor),0.,100.)
+    TurnOn.Fit(fermiFunction,"%f"%(Cor),"%f"%(Cor),low,high)
     TurnOn.SetMarkerSize(3)
     fermiFunction.SetLineColor(5)
     out.append(TurnOn)
     if UnCorrHist != None:
-      Nom = GetHist(UnCorrHist,"/",Trig,0,0,"2011PromptReco = %f"%(UnCor))
+      Nom = GetHist(UnCorrHist,"/",Trig,0,0,"Jet Data set = %f"%(UnCor))
       DeNom = GetHist(UnCorrHist,"/","RefJet",0,0,0)
-
       TurnOn2 = Root.TGraphAsymmErrors()
-      (i,bins)= reBiner(Nom,20.)
+      (i,bins)= reBiner(Nom,10.)
       c = Nom.Rebin(i,"c",bins)
       d = DeNom.Rebin(i,"d",bins)
       TurnOn2.Divide(c,d)
       # TurnOn.Draw("ap same")
       mg.Add(TurnOn2)
-      # TurnOn2.SetMarkerColor(6)
+      TurnOn2.SetMarkerColor(6)
       TurnOn2.SetMarkerStyle(32)
-      TurnOn2.GetXaxis().SetRangeUser(0.,100.)
+      # TurnOn2.GetXaxis().SetRangeUser(0.,100.)
       fermiFunction2 = Root.TF1("fermiFunction2",errorFun,0.,1000.,3)
       fermiFunction2.SetParameters(1.00,UnCor,1.)
       fermiFunction2.SetParNames("#epsilon","#mu","#sigma")
-      TurnOn2.Fit(fermiFunction2,"%f"%(Cor),"%i"%(int(Cor)),0.,100.)
+      TurnOn2.Fit(fermiFunction2,"%f"%(Cor),"%i"%(int(Cor)),low,high)
+      fermiFunction2.SetLineColor(6)
       fermiFunction2.Draw("same")
     leg.Clear()
-    leg.AddEntry(TurnOn,"PromprReco-v4 Threshold =  %f"%(Cor), "LP")
-    if UnCorrHist !=None: leg.AddEntry(TurnOn2,"MinBias prompt reco v2 = %f"%(Cor), "LP")
+    leg.AddEntry(TurnOn,"Min Bias data set =  %f"%(Cor), "LP")
+    if UnCorrHist !=None: leg.AddEntry(TurnOn2,"Jet = %f"%(Cor), "LP")
     mg.Draw("ap")
     fermiFunction.SetLineColor(4)
     fermiFunction.Draw("same")
-
-    mg.GetXaxis().SetRangeUser(0.,100.)
-
-    # Nom.SetLineColor(4)
-    # DeNom.SetLineColor(8)
-    # DeNom.Draw("hist")
-    # DeNom.GetXaxis().SetRangeUser(0.,150.)
-    # Nom.Draw("samehist")
+    mg.GetXaxis().SetRangeUser(0.,250.)
+    mg.GetYaxis().SetRangeUser(0.,1.5)
     leg.Draw("same")
-    c1.SaveAs("TurnOnFor_%i.pdf"%(int(Cor)))
+    ensure_dir(CorrHist[0:-5])
+    c1.SaveAs(CorrHist[0:-5]+"/TurnOnFor_%i.pdf"%(int(Cor)))
     c1.Clear()
     leg.Clear()
   return out
+# File = "MinBias_ZeroBiasTrigger.root"
+File = "JET_eta3_AllJetTriggers.root"
+# File = "Jet30.root"
+# File = "htEnCorrelation.root"
+File2 = None
+File = "200GeVJet.root"
+File = "HTTurnOns.root"
+File = "HTFromJet.root"
+File = "NoL1CorrectionsRAW.root"
+# File = "RAWTest.root"
+# File = "less162136.root"
+# File = "more162136.root"
+# File2 = "JET_eta3_AllJetTriggers.root"
+# File = "LobeLook.root"
 
-
-a = MakeTurnOn(CorrHist = "JET.root", UnCorrHist = None, BitList = BitList,
+a = MakeTurnOn(CorrHist = File, UnCorrHist = File2, BitList = BitList,
                 CorThresholds = CorThresholds, UnCorThresholds = UnCorThresholds)
 
 
@@ -198,22 +220,54 @@ for L1 in L1Jet:
   leg.Clear()
   leg.SetFillStyle(4100)
   leg.SetFillStyle(0)
-  hist = GetHist("promptv4.root","/",L1,0,0,"L1 Jet Energy")
+  hist = GetHist(File,"/",L1,0,0,"L1 Jet Energy")
+  outDir = File[0:-5]
   hist.SetLineColor(13)
   # hist.GetXaxis().SetRangeUser(0.,150.)
   hist.Draw("hist")
   leg.Draw("same")
-  c1.SaveAs("%s.pdf"%(L1))
-
-resList = ["ResolutionHB","ResolutionEB","ResolutionHE","ResolutionEE"]
+  ensure_dir(outDir)
+  c1.SaveAs(outDir+"/%s.pdf"%(L1))
+#
+resList = ["ResolutionHB","ResolutionEB","ResolutionHE","ResolutionEE","EnCorrelation","RecoJetEtvsUnCorRecoJetEt","ResolutionAsFnOfeta","ResolutionAsFnOfpT","EMF","DeltaR","MEtCorrelation","L1HtRecoJetCorrelation"]
 for h in resList:
-    hist = GetHist("JET.root","/",h,1,0,"PromprReco-v4")
-    hist.GetXaxis().SetTitle("#frac{Reco Et - L1Et}{Reco Et}")
-    # hist.GetXaxis().SetRangeUser(-5.,3.0)
-    hist.SetTitle(h)
-    c1.SetLogy()
-    hist.Draw("hist")
-    c1.SaveAs("%s.pdf"%(h))
+    hist = GetHist(File,"/",h,1,0,"PromprReco-v4")
+    # c1.Clear()
+    outDir = File[0:-5]
+    ensure_dir(outDir)
+    Norm = False
+    c1.SetLogy(0)
+    if str(type(hist)) == "<class '__main__.TH2F'>":
+      hist.GetZaxis().SetTitleSize(0.2)
+      hist.GetZaxis().SetTitleOffset(0.02)
+      hist.GetZaxis().SetLabelSize(0.02)
+      # hist.SetMinimum(1)
+      if h=="EnCorrelation":
+        hist.GetYaxis().SetTitle("L1 Et Uncorrected")
+        hist.GetXaxis().SetRangeUser(0.,300.)
+        hist.GetYaxis().SetRangeUser(0.,300.)
+      if h == "RecoJetEtvsUnCorRecoJetEt":
+        hist.GetXaxis().SetRangeUser(0.,100.)
+        hist.GetYaxis().SetRangeUser(0.,100.)
+      if h=="ResolutionAsFnOfeta" or h == "ResolutionAsFnOfpT":
+        # hist.GetXaxis().SetRangeUser(0.,300.)
+        hist.GetYaxis().SetRangeUser(-2.,2.)
+      if h == "ResolutionAsFnOfpT": hist.GetXaxis().SetTitle("RecoJet Et")
+      if Norm:
+        hist.DrawNormalized("COLZ")
+        hist.GetZaxis().SetTitle("\% of events")
+        c1.Print(outDir+"/%s"%(h)+"Normalized.pdf")
+      else :
+        hist.Draw("COLZ")
+        c1.Print(outDir+"/%s"%(h)+".pdf")
+    elif str(type(hist)) == "<class '__main__.TH1F'>":
+      hist.GetXaxis().SetTitle("#frac{Reco Et - L1Et}{Reco Et}")
+      if h == "EMF": hist.GetXaxis().SetTitle("FEM")
+      if h != "EMF": hist.GetXaxis().SetRangeUser(-1.,1.0)
+      hist.SetTitle(h)
+      c1.SetLogy()
+      hist.Draw("hist")
+      c1.SaveAs(outDir+"/%s.pdf"%(h))
 # multi = Root.TMultiGraph()
 # for b in a:
   # multi.Add(b)

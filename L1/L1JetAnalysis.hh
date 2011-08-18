@@ -70,11 +70,18 @@ class L1JetAnalysis : public L1Ntuple
   TH1F *ResolutionEB;
   TH2F *ResolutionEtEB;
   TH2F *RecoVsl1EB;
+  TH2F *recoJetCorrelation;
   TH1F *EMF;
   TH2I *timeMap;
   TH2F *ResolutionAsFnOfpT;
   TH2F *ResolutionAsFnOfeta;
   TH2D *L1EtaPhiMap;
+  TH2F *L1HtRecoJetCorrelation;
+  TH2F *MEtCorrelation;
+  TH1F *RecoHTL1100;
+  TH1F *RecoHTL1150;
+  TH1F *RecoHTL150;
+  TH1F *RecoHT;
 };
 
 double L1JetAnalysis::deltaPhi(double phi1, double phi2) {
@@ -114,7 +121,7 @@ bool L1JetAnalysis::MatchJet(int RecoJetIdx){
       minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]);
     }
   }
-  if(minDeltaR < 0.5){ return true; }
+  if(minDeltaR < .5){ return true; }
   else return false;
 }
 
@@ -130,7 +137,7 @@ std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
     {
       minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->cenJetEta[i], l1extra_->cenJetPhi[i]);
       //printf( "Delta R = %f \n", minDeltaR);
-      if(minDeltaR < 0.5){
+      if(minDeltaR < .5){
       matchedJet.first = 0;
       matchedJet.second = i;
       }
@@ -143,7 +150,7 @@ std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
     {
       minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->tauJetEta[i], l1extra_->tauJetPhi[i]);
       //printf( "Delta R = %f \n", minDeltaR);
-      if(minDeltaR < 0.5){
+      if(minDeltaR < .5){
       matchedJet.first = 1;
       matchedJet.second = i;
       }
@@ -156,7 +163,7 @@ std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
     {
       minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1extra_->fwdJetEta[i], l1extra_->fwdJetPhi[i]);
       //printf( "Delta R = %f \n", minDeltaR);
-      if(minDeltaR < 0.5){
+      if(minDeltaR < .5){
       matchedJet.first = 2;
       matchedJet.second = i;
       }
