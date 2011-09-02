@@ -18,7 +18,7 @@ class L1JetAnalysis : public L1Ntuple
   ~L1JetAnalysis() {}
 
     //main function macro : arguments can be adpated to your need
-  void run(Long64_t nevents, TString outputname , bool UnCorThresholds,TString TriggerBit);
+  void run(Long64_t nevents, TString outputname ,TString TriggerBit);
 
   private :
   bool PassTrig(int ib,int bx);
@@ -26,6 +26,9 @@ class L1JetAnalysis : public L1Ntuple
   bool PassHLT( TString TrigBit);
   bool LooseID( int Jet );
   std::pair <int,int> ReturnMatchedJet(int RecoJetIdx);
+  bool MatchEmuJet( int Jet );
+  std::pair <int,int> ReturnMatchedEmuJet(int RecoJetIdx);
+  double ReturnMatchedEmuQuantity( std::pair<int,int> matchJet,int Quantity);
   void BookHistos();
   double ReturnMatchedQuantity( std::pair<int,int> matchJet,int Quantity);
   virtual double deltaPhi(double phi1, double phi2);
@@ -82,6 +85,7 @@ class L1JetAnalysis : public L1Ntuple
   TH1F *RecoHTL1150;
   TH1F *RecoHTL150;
   TH1F *RecoHT;
+  TH2F *L1CorVsUnCor;
 };
 
 double L1JetAnalysis::deltaPhi(double phi1, double phi2) {
@@ -124,6 +128,34 @@ bool L1JetAnalysis::MatchJet(int RecoJetIdx){
   if(minDeltaR < .5){ return true; }
   else return false;
 }
+
+bool L1JetAnalysis::MatchEmuJet(int RecoJetIdx){
+  double minDeltaR = 999999.;
+  for(unsigned int i = 0; i < l1emuextra_->nCenJets; i++){
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->cenJetEta[i], l1emuextra_->cenJetPhi[i]) < minDeltaR)
+    {
+        minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->cenJetEta[i], l1emuextra_->cenJetPhi[i]);
+    }
+  }
+
+  for(unsigned int i = 0; i < l1emuextra_->nTauJets; i++){
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->tauJetEta[i], l1emuextra_->tauJetPhi[i]) < minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->tauJetEta[i], l1emuextra_->tauJetPhi[i]);
+    }
+  }
+
+  for(unsigned int i = 0; i < l1emuextra_->nFwdJets; i++){
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->fwdJetEta[i], l1emuextra_->fwdJetPhi[i]) < minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->fwdJetEta[i], l1emuextra_->fwdJetPhi[i]);
+    }
+  }
+  if(minDeltaR < .5){ return true; }
+  else return false;
+}
+
+
 
 std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
   double minDeltaR = 9999.;
@@ -172,6 +204,56 @@ std::pair<int,int> L1JetAnalysis::ReturnMatchedJet(int RecoJetIdx){
   return matchedJet;
 }
 
+
+std::pair<int,int> L1JetAnalysis::ReturnMatchedEmuJet(int RecoJetIdx){
+  double minDeltaR = 9999.;
+  std::pair <int,int> matchedJet(-1,-1);
+  //printf("Reco Jet %i is Et,EtCorr,Eta,Phi (%f ,%f, %f, %f) \n ", RecoJetIdx,recoJet_->et[RecoJetIdx],recoJet_->etCorr[RecoJetIdx] , recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx]);
+  for(unsigned int i = 0; i < l1emuextra_->nCenJets; i++){
+
+    //printf("CenJet Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", l1emuextra_->cenJetEt[i] , l1emuextra_->cenJetEta[i], l1emuextra_->cenJetPhi[i]);
+
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->cenJetEta[i], l1emuextra_->cenJetPhi[i]) < minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->cenJetEta[i], l1emuextra_->cenJetPhi[i]);
+      //printf( "Delta R = %f \n", minDeltaR);
+      if(minDeltaR < .5){
+      matchedJet.first = 0;
+      matchedJet.second = i;
+      }
+    }
+  }
+  //printf("Reco Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", recoJet_->etCorr[RecoJetIdx] , recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx]);
+  for(unsigned int i = 0; i < l1emuextra_->nTauJets; i++){
+    //printf("Tau Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", l1emuextra_->tauJetEt[i] , l1emuextra_->tauJetEta[i], l1emuextra_->tauJetPhi[i]);
+ if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->tauJetEta[i], l1emuextra_->tauJetPhi[i]) < minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->tauJetEta[i], l1emuextra_->tauJetPhi[i]);
+      //printf( "Delta R = %f \n", minDeltaR);
+      if(minDeltaR < .5){
+      matchedJet.first = 1;
+      matchedJet.second = i;
+      }
+    }
+  }
+  for(unsigned int i = 0; i < l1emuextra_->nFwdJets; i++){
+      //printf("FWD Jet is Pt,Eta,Phi ( %f, %f, %f) \n ", l1emuextra_->fwdJetEt[i] , l1emuextra_->fwdJetEta[i], l1emuextra_->fwdJetPhi[i]);
+
+    if( deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->fwdJetEta[i], l1emuextra_->fwdJetPhi[i]) <minDeltaR)
+    {
+      minDeltaR = deltaR(recoJet_->eta[RecoJetIdx], recoJet_->phi[RecoJetIdx], l1emuextra_->fwdJetEta[i], l1emuextra_->fwdJetPhi[i]);
+      //printf( "Delta R = %f \n", minDeltaR);
+      if(minDeltaR < .5){
+      matchedJet.first = 2;
+      matchedJet.second = i;
+      }
+    }
+  }
+  return matchedJet;
+}
+
+
+
 bool L1JetAnalysis::PassTrig(int bit, int bx) {
   if(bit<64) { if((gt_->tw1[bx]>>bit)&1) { return true; } else return false; }
   if(bit<128) { if((gt_->tw2[bx]>>(bit-64))&1) { return true;} else return false;}
@@ -219,6 +301,54 @@ double L1JetAnalysis::ReturnMatchedQuantity( std::pair<int,int> matchJet,int Qua
         }
         if(matchJet.first==2){
           return l1extra_->fwdJetPhi[matchJet.second];
+        }
+        if(matchJet.first==-1){
+          return false;
+        }
+    }
+    return false;
+  }
+
+double L1JetAnalysis::ReturnMatchedEmuQuantity( std::pair<int,int> matchJet,int Quantity){
+  if(Quantity == 1){
+    if(matchJet.first== 0){
+      return l1emuextra_->cenJetEt[matchJet.second];
+    }
+    if(matchJet.first== 1){
+      //cout << " matched jet ET is " << l1emuextra_->tauJetEt[matchJet.second] << endl;
+      return l1emuextra_->tauJetEt[matchJet.second];
+    }
+    if(matchJet.first == 2 ){
+      return l1emuextra_->fwdJetEt[matchJet.second];
+    }
+    if(matchJet.first==-1){
+      return false;}
+    }
+
+    if(Quantity==2){
+        if(matchJet.first==0){
+          return l1emuextra_->cenJetEta[matchJet.second];
+        }
+        if(matchJet.first==1){
+          return l1emuextra_->tauJetEta[matchJet.second];
+        }
+        if(matchJet.first==2){
+          return l1emuextra_->fwdJetEta[matchJet.second];
+        }
+        if(matchJet.first==-1){
+          return false;
+        }
+    }
+
+    if(Quantity==3){
+        if(matchJet.first==0){
+          return l1emuextra_->cenJetPhi[matchJet.second];
+        }
+        if(matchJet.first==1){
+          return l1emuextra_->tauJetPhi[matchJet.second];
+        }
+        if(matchJet.first==2){
+          return l1emuextra_->fwdJetPhi[matchJet.second];
         }
         if(matchJet.first==-1){
           return false;
